@@ -9,12 +9,12 @@ from peft import AutoPeftModelForCausalLM
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from lean_dojo_v2.database.models.theorems import Theorem
-from lean_dojo_v2.prover.base_prover import BaseProver
-from lean_dojo_v2.utils.prompting import (
+from lean_dojo_v2.prompting import (
     format_tactic_prompt,
     format_whole_proof_prompt,
     postprocess_tactic_candidates,
 )
+from lean_dojo_v2.prover.base_prover import BaseProver
 
 
 class HFProver(BaseProver):

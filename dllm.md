@@ -371,6 +371,26 @@ One simple starting point is tactic-script infilling derived from `traced_tactic
     - post-processing constraints (single-line tactic for O1)
     - round-trip: corrupt → denoise (teacher-forced) → exact reconstruction on a tiny synthetic sample
 
+#### Phase 2 — Implementation status (completed)
+
+- Diffusion training package:
+  - [`lean_dojo_v2/diffusion_training/config.py`](lean_dojo_v2/diffusion_training/config.py)
+  - [`lean_dojo_v2/diffusion_training/formatting.py`](lean_dojo_v2/diffusion_training/formatting.py)
+  - [`lean_dojo_v2/diffusion_training/corruption.py`](lean_dojo_v2/diffusion_training/corruption.py)
+  - [`lean_dojo_v2/diffusion_training/objectives.py`](lean_dojo_v2/diffusion_training/objectives.py)
+  - package export: [`lean_dojo_v2/diffusion_training/__init__.py`](lean_dojo_v2/diffusion_training/__init__.py)
+- Trainer + datasets:
+  - [`lean_dojo_v2/trainer/diffusion_trainer.py`](lean_dojo_v2/trainer/diffusion_trainer.py) with:
+    - `DiffusionTacticDataset` (O1)
+    - `DiffusionInfillDataset` (O2)
+    - `DiffusionTrainer` custom denoising loop + checkpoint save + `sample()`
+  - registration: [`lean_dojo_v2/trainer/__init__.py`](lean_dojo_v2/trainer/__init__.py)
+- Training examples:
+  - [`examples/diffusion_train_next_tactic.py`](examples/diffusion_train_next_tactic.py)
+  - [`examples/diffusion_train_infill.py`](examples/diffusion_train_infill.py)
+- Phase 2 tests:
+  - [`lean_dojo_v2/tests/test_diffusion_training.py`](lean_dojo_v2/tests/test_diffusion_training.py)
+
 #### Training-time evaluation
 
 - **Exact-match (weak)**: predicted tactic == gold tactic (not a great metric, but simple).
