@@ -89,11 +89,46 @@ class DiffusionProver(BaseProver):
         prompt = format_whole_proof_prompt(str(self.theorem))
 
         raw_samples = self.sampler.sample_proof(prompt, n=1)
+        if not raw_samples:
+            return ""
 
-        proof = raw_samples[0].strip().replace("<;> ", "")
-        return proof
+        return _postprocess_whole_proof(raw_samples[0])
+
+    def infill_sorry(
+        self,
+        prefix: str,
+        suffix: str,
+        theorem: Optional[Theorem] = None,
+    ) -> str:
+        """Generate proof text for a hole using prefix/suffix conditioning."""
+        if theorem is not None:
+            self.theorem = theorem
+
+        prompt = (
+            "### System:\n"
+            "You are a Lean 4 proof infiller. Fill the hole between PREFIX and SUFFIX.\n"
+            "Output only Lean proof code for the hole, no explanation.\n"
+            "### User:\n"
+            f"PREFIX:\n{prefix}\n\nSUFFIX:\n{suffix}\n\n"
+            "### Assistant:\n"
+        )
+        raw_samples = self.sampler.sample_proof(prompt, n=1)
+        if not raw_samples:
+            return ""
+        return _postprocess_whole_proof(raw_samples[0])
 
 
 def _postprocess_tactics(raw_samples: list[str]) -> list[str]:
     """Backward-compatible wrapper for tests/imports."""
     return postprocess_tactic_candidates(raw_samples)
+
+
+def _postprocess_whole_proof(raw_text: str) -> str:
+    """Sanitize whole-proof generations to keep Lean code only."""
+    proof = raw_text.strip()
+    if proof.startswith("```"):
+        proof = proof.strip("`").strip()
+        if proof.startswith("lean"):
+            proof = proof[len("lean") :].strip()
+    proof = proof.replace("Here's the proof:", "").strip()
+    return proof.replace("<;> ", "")

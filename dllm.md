@@ -442,6 +442,19 @@ Even before training for whole-proof, you can implement inference plumbing.
     - construct `(prefix, suffix)` around `sorry`
     - infill and then verify in a traced repo project
 
+#### Phase 3 — Implementation status (completed)
+
+- Whole-proof inference path:
+  - [`lean_dojo_v2/prover/diffusion_prover.py`](lean_dojo_v2/prover/diffusion_prover.py)
+    - `generate_whole_proof()` now includes robust proof post-processing.
+    - added DLM-specific infill API: `infill_sorry(prefix, suffix, theorem=None)`.
+    - helper: `_postprocess_whole_proof()` strips fences and non-code wrapper text.
+- Demos:
+  - [`examples/theorem_proving/diffusion_whole_proof.py`](examples/theorem_proving/diffusion_whole_proof.py)
+  - [`examples/diffusion_infill_sorry.py`](examples/diffusion_infill_sorry.py)
+- Phase 3 tests:
+  - [`lean_dojo_v2/tests/test_diffusion_whole_proof.py`](lean_dojo_v2/tests/test_diffusion_whole_proof.py)
+
 #### Testing
 
 - "No crash" test + sanity checks:
