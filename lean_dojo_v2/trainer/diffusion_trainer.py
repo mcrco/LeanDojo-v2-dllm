@@ -23,6 +23,7 @@ from lean_dojo_v2.diffusion_training.formatting import (
     normalize_tactic_target,
 )
 from lean_dojo_v2.diffusion_training.objectives import masked_denoising_loss
+from lean_dojo_v2.diffusion_training.whole_proof_data import build_whole_proof_examples
 from lean_dojo_v2.lean_dojo.data_extraction.lean import LeanGitRepo
 
 
@@ -113,6 +114,28 @@ class DiffusionInfillDataset(Dataset):
         return self.data[idx]
 
 
+class DiffusionWholeProofDataset(Dataset):
+    """Dataset for theorem-statement -> full proof reconstruction."""
+
+    def __init__(
+        self,
+        data_path: str,
+        include_focused_tactics: bool = False,
+    ):
+        with open(data_path) as f:
+            raw = json.load(f)
+        self.data = build_whole_proof_examples(
+            merged_items=raw,
+            include_focused_tactics=include_focused_tactics,
+        )
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx: int):
+        return self.data[idx]
+
+
 class DiffusionTrainer:
     """Custom discrete denoising trainer for diffusion objectives."""
 
@@ -130,6 +153,7 @@ class DiffusionTrainer:
         seed: int = 42,
         num_holes: int = 1,
         max_hole_len: int = 3,
+        include_focused_tactics: bool = False,
     ):
         self.config = DiffusionTrainingConfig(
             model_name=model_name,
@@ -163,6 +187,7 @@ class DiffusionTrainer:
         self.model.to(self.device)
 
         self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr)
+        self.include_focused_tactics = include_focused_tactics
 
     def _build_dataset(self, train_json_path: str) -> Dataset:
         if self.config.objective == "next_tactic":
@@ -174,6 +199,11 @@ class DiffusionTrainer:
                 num_holes=self.config.num_holes,
                 max_hole_len=self.config.max_hole_len,
                 hole_token_template=self.config.hole_token_template,
+            )
+        if self.config.objective == "whole_proof":
+            return DiffusionWholeProofDataset(
+                train_json_path,
+                include_focused_tactics=self.include_focused_tactics,
             )
         raise ValueError(f"Unsupported objective: {self.config.objective}")
 

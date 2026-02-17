@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-ObjectiveType = Literal["next_tactic", "infill"]
+ObjectiveType = Literal["next_tactic", "infill", "whole_proof"]
 
 
 @dataclass

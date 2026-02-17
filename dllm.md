@@ -492,6 +492,23 @@ Training task definition:
 - Output: Lean code proof term
 - Evaluation: "proof checks" via Lean/Pantograph in a controlled environment
 
+#### Phase 4 — Implementation status (baseline scaffold completed)
+
+- Whole-proof data utilities:
+  - [`lean_dojo_v2/diffusion_training/whole_proof_data.py`](lean_dojo_v2/diffusion_training/whole_proof_data.py)
+    - `reconstruct_proof_from_tactics(...)`
+    - `build_whole_proof_examples(...)`
+- Trainer support:
+  - [`lean_dojo_v2/trainer/diffusion_trainer.py`](lean_dojo_v2/trainer/diffusion_trainer.py)
+    - added `DiffusionWholeProofDataset`
+    - added objective mode `objective=\"whole_proof\"`
+  - objective type extended in [`lean_dojo_v2/diffusion_training/config.py`](lean_dojo_v2/diffusion_training/config.py)
+- Example:
+  - [`examples/diffusion_train_whole_proof.py`](examples/diffusion_train_whole_proof.py)
+- Phase 4 tests:
+  - [`lean_dojo_v2/tests/test_diffusion_whole_proof_data.py`](lean_dojo_v2/tests/test_diffusion_whole_proof_data.py)
+- Scope note: this baseline uses tactic-trace reconstruction (Option B). Source-span extraction from Lean files (Option A) remains future work.
+
 ---
 
 ### Identified gaps and open questions

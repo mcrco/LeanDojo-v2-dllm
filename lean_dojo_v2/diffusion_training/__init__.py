@@ -8,6 +8,7 @@ from .formatting import (
     normalize_tactic_target,
 )
 from .objectives import masked_denoising_loss
+from .whole_proof_data import build_whole_proof_examples, reconstruct_proof_from_tactics
 
 __all__ = [
     "DiffusionTrainingConfig",
@@ -17,4 +18,6 @@ __all__ = [
     "format_infill_prompt",
     "normalize_tactic_target",
     "masked_denoising_loss",
+    "build_whole_proof_examples",
+    "reconstruct_proof_from_tactics",
 ]
