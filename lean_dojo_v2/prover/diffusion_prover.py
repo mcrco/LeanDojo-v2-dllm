@@ -14,6 +14,11 @@ from lean_dojo_v2.database.models.theorems import Theorem
 from lean_dojo_v2.diffusion.config import DiffusionConfig
 from lean_dojo_v2.diffusion.sampler import DiffusionSampler
 from lean_dojo_v2.prover.base_prover import BaseProver
+from lean_dojo_v2.utils.prompting import (
+    format_tactic_prompt,
+    format_whole_proof_prompt,
+    postprocess_tactic_candidates,
+)
 
 
 class DiffusionProver(BaseProver):
@@ -62,22 +67,10 @@ class DiffusionProver(BaseProver):
         if not hasattr(self, "theorem") or self.theorem is None:
             return None
 
-        prompt = (
-            "### System:\n"
-            "You are a Lean 4 tactic generator. Given a goal state, "
-            "output exactly ONE Lean tactic that advances or solves the goal.\n"
-            "Rules:\n"
-            "- Output only the tactic text; no prose, quotes, or code fences.\n"
-            "- Single line only; no `by` blocks.\n"
-            "- Never use `sorry` or `admit`.\n"
-            "### User:\n"
-            "{goal_str}\n\n"
-            "### Assistant:\n"
-        ).format(goal_str=str(state))
+        prompt = format_tactic_prompt(str(state))
 
         raw_samples = self.sampler.sample_tactic(prompt, n=self.num_samples)
-
-        tactics = _postprocess_tactics(raw_samples)
+        tactics = postprocess_tactic_candidates(raw_samples)
 
         if not tactics:
             logger.debug("Diffusion sampler produced no valid tactics")
@@ -93,15 +86,7 @@ class DiffusionProver(BaseProver):
         """
         self.theorem = theorem
 
-        prompt = (
-            "### System:\n"
-            "Given a theorem statement, "
-            "output the complete proof of the theorem in Lean 4 code.\n"
-            "Only output the proof, no explanation, no comments, no theorem, nothing else."
-            "### User:\n"
-            "{theorem_str}\n\n"
-            "### Assistant:\n"
-        ).format(theorem_str=str(self.theorem))
+        prompt = format_whole_proof_prompt(str(self.theorem))
 
         raw_samples = self.sampler.sample_proof(prompt, n=1)
 
@@ -110,18 +95,5 @@ class DiffusionProver(BaseProver):
 
 
 def _postprocess_tactics(raw_samples: list[str]) -> list[str]:
-    """Post-process raw diffusion outputs into valid single-line tactics.
-
-    Applies the same filters as HFProver.next_tactic:
-    - Strip whitespace
-    - Take first line only (split on newline)
-    - Split on '<;>' and take first segment
-    - Skip empty strings and 'sorry'
-    """
-    tactics: list[str] = []
-    for text in raw_samples:
-        tactic = text.strip()
-        tactic = tactic.split("\n")[0].split("<;>")[0].strip()
-        if tactic and tactic != "sorry" and tactic != "admit":
-            tactics.append(tactic)
-    return tactics
+    """Backward-compatible wrapper for tests/imports."""
+    return postprocess_tactic_candidates(raw_samples)

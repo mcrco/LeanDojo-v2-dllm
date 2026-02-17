@@ -175,6 +175,24 @@ Deliverable: a short design note (in this file or a separate doc) stating the ex
   - `examples/diffusion_next_tactic.py`: proof search on a simple goal — **mirror [`generate_tactics.py`](examples/theorem_proving/generate_tactics.py)**.
   - `examples/diffusion_agent.py`: run on a traced GitHub repo and try to solve `sorry` theorems — **mirror [`external_agent.py` main()](lean_dojo_v2/agent/external_agent.py#L23-L32)**.
 
+#### Phase 1 — Implementation status (completed)
+
+- Diffusion inference package:
+  - [`lean_dojo_v2/diffusion/config.py`](lean_dojo_v2/diffusion/config.py)
+  - [`lean_dojo_v2/diffusion/sampler.py`](lean_dojo_v2/diffusion/sampler.py)
+- Prover/agent integration:
+  - [`lean_dojo_v2/prover/diffusion_prover.py`](lean_dojo_v2/prover/diffusion_prover.py)
+  - [`lean_dojo_v2/agent/diffusion_agent.py`](lean_dojo_v2/agent/diffusion_agent.py)
+  - registrations: [`lean_dojo_v2/prover/__init__.py`](lean_dojo_v2/prover/__init__.py), [`lean_dojo_v2/agent/__init__.py`](lean_dojo_v2/agent/__init__.py)
+- Shared prompt + post-processing utilities (canonical format for inference):
+  - [`lean_dojo_v2/utils/prompting.py`](lean_dojo_v2/utils/prompting.py)
+  - wired into both [`lean_dojo_v2/prover/hf_prover.py`](lean_dojo_v2/prover/hf_prover.py) and [`lean_dojo_v2/prover/diffusion_prover.py`](lean_dojo_v2/prover/diffusion_prover.py)
+- Examples:
+  - [`examples/theorem_proving/diffusion_next_tactic.py`](examples/theorem_proving/diffusion_next_tactic.py)
+  - [`examples/diffusion_agent.py`](examples/diffusion_agent.py)
+- Phase 1 tests:
+  - [`lean_dojo_v2/tests/test_diffusion_sampler.py`](lean_dojo_v2/tests/test_diffusion_sampler.py)
+
 #### Prompting / formatting decisions (make these explicit)
 
 - Use the same behavioral contract as [`SFTDataset`](lean_dojo_v2/trainer/sft_trainer.py#L22-L69) and [`HFProver`](lean_dojo_v2/prover/hf_prover.py):

@@ -10,6 +10,11 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from lean_dojo_v2.database.models.theorems import Theorem
 from lean_dojo_v2.prover.base_prover import BaseProver
+from lean_dojo_v2.utils.prompting import (
+    format_tactic_prompt,
+    format_whole_proof_prompt,
+    postprocess_tactic_candidates,
+)
 
 
 class HFProver(BaseProver):
@@ -47,18 +52,7 @@ class HFProver(BaseProver):
         if not hasattr(self, "theorem") or self.theorem is None:
             return None
 
-        prompt = (
-            "### System:\n"
-            "You are a Lean 4 tactic generator. Given a goal state, "
-            "output exactly ONE Lean tactic that advances or solves the goal.\n"
-            "Rules:\n"
-            "- Output only the tactic text; no prose, quotes, or code fences.\n"
-            "- Single line only; no `by` blocks.\n"
-            "- Never use `sorry` or `admit`.\n"
-            "### User:\n"
-            "{goal_str}\n\n"
-            "### Assistant:\n"
-        ).format(goal_str=str(state))
+        prompt = format_tactic_prompt(str(state))
 
         inputs = self.tokenizer(
             prompt, return_tensors="pt", truncation=True, max_length=512
@@ -79,12 +73,10 @@ class HFProver(BaseProver):
 
         generated_texts = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
 
-        tactics = []
-        for text in generated_texts:
-            tactic_part = text[len(prompt) :].strip()
-            tactic_part = tactic_part.split("\n")[0].split("<;>")[0].strip()
-            if tactic_part and tactic_part != "sorry":
-                tactics.append(tactic_part)
+        candidates = [text[len(prompt) :] for text in generated_texts]
+        tactics = postprocess_tactic_candidates(candidates)
+        if not tactics:
+            return None
 
         selected_tactic = random.choice(tactics)
 
@@ -93,15 +85,7 @@ class HFProver(BaseProver):
     def generate_whole_proof(self, theorem: Theorem) -> str:
         self.theorem = theorem
 
-        prompt = (
-            "### System:\n"
-            "Given a theorem statement, "
-            "output the complete proof of the theorem in Lean 4 code.\n"
-            "Only output the proof, no explanation, no comments, no theorem, nothing else."
-            "### User:\n"
-            "{theorem_str}\n\n"
-            "### Assistant:\n"
-        ).format(theorem_str=str(self.theorem))
+        prompt = format_whole_proof_prompt(str(self.theorem))
 
         inputs = self.tokenizer(
             prompt, return_tensors="pt", truncation=True, max_length=512
